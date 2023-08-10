@@ -28,11 +28,12 @@ db_orders = db["orders"]
 @app.get("/")
 def get_customers():
     # In ra tài liệu
-    documents = db_customer.find()
-    customer_list= []
-    for doc in documents:
-        customer_list.append(customer_info(doc))
-    return customer_list
+    # documents = db_customer.find()
+    # customer_list= []
+    # for doc in documents:
+    #     customer_list.append(customer_info(doc))
+    # return customer_list
+    return "Hello"
 
 @app.get("/get-customer/",dependencies=[Depends(validate_token)])
 async def get_customer(id:str = Depends(validate_token)):
