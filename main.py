@@ -9,7 +9,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from security import reusable_oauth2, validate_token
 from services import generate_token
 from datetime import datetime
-app = FastAPI()
+app = FastAPI(root_path="/api")
 origins = ["*"]
 app.add_middleware(
     CORSMiddleware,
