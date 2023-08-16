@@ -10,10 +10,10 @@ from security import reusable_oauth2, validate_token
 from services import generate_token
 from datetime import datetime
 app = FastAPI(
-    title="Your API Title",
-    version="1.0",
-    openapi_url="/openapi.json",
-)
+        docs_url="/api/docs",
+        openapi_url="/api/docs/openapi.json",
+        redoc_url=None
+    )
 origins = ["*"]
 app.add_middleware(
     CORSMiddleware,
