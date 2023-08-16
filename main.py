@@ -1,6 +1,6 @@
 from typing import Optional
 from bson import ObjectId
-from fastapi import Body, Depends, FastAPI, HTTPException, Query,status
+from fastapi import APIRouter, Body, Depends, FastAPI, HTTPException, Query,status
 from pymongo import MongoClient
 from fastapi.responses import JSONResponse
 import uvicorn
@@ -9,7 +9,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from security import reusable_oauth2, validate_token
 from services import generate_token
 from datetime import datetime
-app = FastAPI(root_path="/api")
+app = FastAPI()
 origins = ["*"]
 app.add_middleware(
     CORSMiddleware,
@@ -24,8 +24,9 @@ db_customer = db["customers"]
 db_products = db["products"]
 db_orders = db["orders"]
 
+router = APIRouter(prefix="/api")
 
-@app.get("/")
+@router.get("/")
 def get_customers():
     # In ra tài liệu
     # documents = db_customer.find()
@@ -35,7 +36,7 @@ def get_customers():
     # return customer_list
     return "Hello"
 
-@app.get("/get-customer/",dependencies=[Depends(validate_token)])
+@router.get("/get-customer/",dependencies=[Depends(validate_token)])
 async def get_customer(id:str = Depends(validate_token)):
     customer = db_customer.find_one({"_id": ObjectId(id)})
     if customer:
@@ -43,7 +44,7 @@ async def get_customer(id:str = Depends(validate_token)):
     raise HTTPException(status_code=404, detail=f"Customer {id} not found")
 
 
-@app.post("/create-customer")
+@router.post("/create-customer")
 async def create_customer(customer:Customer = Body(...)):
     customer = customer.dict()
     existing_user = db_customer.find_one({"user": customer["user"]})
@@ -57,7 +58,7 @@ async def create_customer(customer:Customer = Body(...)):
         content={"message": "Account created successfully."},
     ) 
 
-@app.post("/login")
+@router.post("/login")
 async def check_customer(body:Login = Body(...)):
     body = body.dict()
     existing_user = db_customer.find_one({"user": body["user"],"password": body["password"]})
@@ -71,7 +72,7 @@ async def check_customer(body:Login = Body(...)):
     raise HTTPException(status_code=401, detail='Đăng nhập không thành công')
       
 
-@app.get("/get-products/{option}")
+@router.get("/get-products/{option}")
 async def get_products(
     option: str,
     filter: str = "",
@@ -108,7 +109,7 @@ async def get_products(
             return product_list
         return product_list
 
-@app.put("/add-to-cart/{id}",dependencies=[Depends(validate_token)])
+@router.put("/add-to-cart/{id}",dependencies=[Depends(validate_token)])
 async def add_to_cart(
     id: str,
     idUser:str =  Depends(validate_token)
@@ -129,7 +130,7 @@ async def add_to_cart(
         content={"message": "Add to cart successfully."}
     )
 
-@app.delete("/delete-cart/{id}",dependencies=[Depends(validate_token)])
+@router.delete("/delete-cart/{id}",dependencies=[Depends(validate_token)])
 async def delete_cart(
     id: str,
     idUser:str =  Depends(validate_token)
@@ -144,7 +145,7 @@ async def delete_cart(
         status_code=status.HTTP_200_OK,
         content={"message": "Delete cart successfully."}
     )
-@app.delete("/delete-all-cart",dependencies=[Depends(validate_token)])
+@router.delete("/delete-all-cart",dependencies=[Depends(validate_token)])
 async def delete_all_cart(
     idUser:str =  Depends(validate_token)
 ):
@@ -155,7 +156,7 @@ async def delete_all_cart(
         content={"message": "Delete all cart successfully."}
     )
 
-@app.put("/decrease-product/{id}",dependencies=[Depends(validate_token)])
+@router.put("/decrease-product/{id}",dependencies=[Depends(validate_token)])
 async def decrease_product(
     id: str,
     idUser:str =  Depends(validate_token)
@@ -172,7 +173,7 @@ async def decrease_product(
                 )
 
     
-@app.post("/create-product")
+@router.post("/create-product")
 async def create_product(product:Product = Body(...)):
     product = product.dict()
     existing_product = db_products.find_one({"color": product["color"]})
@@ -188,7 +189,7 @@ async def create_product(product:Product = Body(...)):
         content={"message": "Product created successfully."},
     )
     
-@app.put("/update-product/{id}")
+@router.put("/update-product/{id}")
 async def update_product(
     id: str,
     product:Product = Body(...),
@@ -199,7 +200,7 @@ async def update_product(
         status_code=status.HTTP_200_OK,
         content={"message": "Product updated successfully."},
     )
-@app.delete("/delete-product/{id}")
+@router.delete("/delete-product/{id}")
 async def delete_product(
     id: str,
 ):
@@ -209,7 +210,7 @@ async def delete_product(
         content={"message": "Product deleted successfully."},
     )
     
-@app.put("/update-customer/{id}")
+@router.put("/update-customer/{id}")
 async def update_customer(
     id: str,
     customer:Customer = Body(...),
@@ -220,7 +221,7 @@ async def update_customer(
         status_code=status.HTTP_200_OK,
         content={"message": "Customer updated successfully."},
     )
-@app.delete("/delete-customer/{id}")
+@router.delete("/delete-customer/{id}")
 async def delete_customer(
     id: str,
 ):
@@ -230,7 +231,7 @@ async def delete_customer(
         content={"message": "Customer deleted successfully."},
     )
 
-@app.post("/create-order")
+@router.post("/create-order")
 async def add_order(
     order:Order = Body(...),
 
@@ -241,7 +242,7 @@ async def add_order(
         status_code=status.HTTP_200_OK,
         content={"message": "Order created successfully."},
     )
-@app.get("/get-orders")
+@router.get("/get-orders")
 async def get_orders(
     month_year:str = "all",
 ):
@@ -259,7 +260,7 @@ async def get_orders(
             if formatted_date in time:
                 order_list.append(order_info(doc))
         return order_list
-@app.get("/get-orders-by-id",dependencies=[Depends(validate_token)])
+@router.get("/get-orders-by-id",dependencies=[Depends(validate_token)])
 async def get_orders_by_id(
     idUser:str =  Depends(validate_token)
 ):
@@ -268,7 +269,7 @@ async def get_orders_by_id(
     for doc in documents:
         order_list.append(order_info(doc))
     return order_list
-@app.delete("/delete-order/{id}")    
+@router.delete("/delete-order/{id}")    
 async def delete_order(
     id: str,
 ):
@@ -278,6 +279,8 @@ async def delete_order(
         content={"message": "Order deleted successfully."},
     )
 
+# Mount the router in your main FastAPI application
+app.include_router(router)
 
     
 def order_info(order) -> dict:
@@ -338,6 +341,7 @@ def customer_info(customer) -> dict:
         "password": customer["password"],
         "cart": customer["cart"] 
     }
+
 
 
 if __name__ == "__main__":
