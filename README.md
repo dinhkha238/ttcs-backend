@@ -1,7 +1,7 @@
 * Các bước chạy project
-- Tạo môi trường
+- Tạo môi trường: 
   python -m venv venv
-- Active môi trường
+- Active môi trường: 
   venv/Scripts/Active.ps1
-- Run project
+- Run project: 
   python main.py
