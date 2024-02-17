@@ -22,7 +22,7 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
-client = MongoClient("mongodb://localhost:27017/")
+client = MongoClient("mongodb://20.243.123.180:27017/")
 db = client["shopping"]
 db_customer = db["customers"]
 db_products = db["products"]
@@ -348,4 +348,4 @@ def customer_info(customer) -> dict:
 
 
 if __name__ == "__main__":
-    uvicorn.run("main:app", host="0.0.0.0", port=8000, reload=True)
+    uvicorn.run("main:app", host="127.0.0.1", port=8000, reload=True)
