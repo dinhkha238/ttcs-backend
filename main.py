@@ -1,14 +1,13 @@
-from typing import Optional
 from bson import ObjectId
-from fastapi import APIRouter, Body, Depends, FastAPI, HTTPException, Query,status
+from fastapi import APIRouter, Body, Depends, FastAPI, HTTPException, Request,status
 from pymongo import MongoClient
 from fastapi.responses import JSONResponse
 import uvicorn
 from model import Customer, Login, Order, Product
 from fastapi.middleware.cors import CORSMiddleware
-from security import reusable_oauth2, validate_token
+from security import validate_token
 from services import generate_token
-from datetime import datetime
+import datetime
 app = FastAPI(
         docs_url="/api/docs",
         openapi_url="/api/docs/openapi.json",
@@ -22,11 +21,13 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+# Connect to MongoDB
 client = MongoClient("mongodb://20.243.123.180:27017/")
 db = client["shopping"]
 db_customer = db["customers"]
 db_products = db["products"]
 db_orders = db["orders"]
+db_sessions = db["sessions"]
 
 router = APIRouter(prefix="/api")
 
@@ -62,12 +63,21 @@ async def create_customer(customer:Customer = Body(...)):
     ) 
 
 @router.post("/login")
-async def check_customer(body:Login = Body(...)):
+async def check_customer(request: Request,body:Login = Body(...)):
     body = body.dict()
     existing_user = db_customer.find_one({"user": body["user"],"password": body["password"]})
     if existing_user:
         token = generate_token(str(existing_user['_id']))
-        print(token)
+        # Lấy thông tin về địa chỉ IP và thời gian kết nối
+        ip = request.client.host
+        time = datetime.datetime.now()
+        
+        # Lưu thông tin vào cơ sở dữ liệu
+        db_sessions.insert_one({
+            "user": existing_user['user'],
+            "ip": ip,
+            "time": time
+        })
         # Trả về JWT 
         return {'token': token}
 
