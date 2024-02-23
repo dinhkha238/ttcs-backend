@@ -22,7 +22,7 @@ app.add_middleware(
     allow_headers=["*"],
 )
 # Connect to MongoDB
-client = MongoClient("mongodb://20.243.123.180:27017/")
+client = MongoClient("mongodb+srv://khand:123@cluster0.boxtihw.mongodb.net/")
 db = client["shopping"]
 db_customer = db["customers"]
 db_products = db["products"]
